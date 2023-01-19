@@ -26,8 +26,20 @@ debugObject.createBox = () => {
   });
 };
 
+debugObject.reset = () => {
+  for (const object of objectsToUpdate) {
+    object.body.removeEventListener('collide', playHitSound);
+    world.removeBodyEvent(object.body);
+
+    scene.remove(object.mesh);
+  }
+
+  objectsToUpdate.splice(0, objectsToUpdate.length);
+};
+
 gui.add(debugObject, 'createSphere');
 gui.add(debugObject, 'createBox');
+gui.add(debugObject, 'reset');
 
 /**
  * Base
@@ -37,6 +49,18 @@ const canvas = document.querySelector('canvas.webgl');
 
 // Scene
 const scene = new THREE.Scene();
+
+// Sounds
+const hitSound = new Audio('/sounds/hit.mp3');
+const playHitSound = (collision) => {
+  const impactStrength = collision.contact.getImpactVelocityAlongNormal();
+
+  if (impactStrength > 1.5) {
+    hitSound.volume = Math.random();
+    hitSound.currentTime = 0;
+    hitSound.play();
+  }
+};
 
 /**
  * Textures
@@ -198,6 +222,7 @@ const createSphere = (radius, position) => {
   });
 
   body.position.copy(position);
+  body.addEventListener('collide', playHitSound);
   world.addBody(body);
 
   objectsToUpdate.push({ mesh: mesh, body: body });
@@ -232,6 +257,7 @@ const createBox = (width, height, depth, position) => {
   });
 
   body.position.copy(position);
+  body.addEventListener('collide', playHitSound);
   world.addBody(body);
 
   objectsToUpdate.push({ mesh: mesh, body: body });
